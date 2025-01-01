@@ -9,6 +9,7 @@
 //  http://opensource.org/licenses/MIT
 //
 
+#include <CoreFoundation/CoreFoundation.h>
 #import <UIKit/UIKit.h>
 
 @protocol CustomIOSAlertViewDelegate
@@ -22,6 +23,7 @@
 @property (nonatomic, retain) UIView *parentView;    // The parent view this 'dialog' is attached to
 @property (nonatomic, retain) UIView *dialogView;    // Dialog's container view
 @property (nonatomic, retain) UIView *containerView; // Container within the dialog (place your ui elements here)
+@property (nonatomic, copy) CGSize (^containerSizeBlock)(void); // Block that returns preferred container size
 
 @property (nonatomic, assign) id<CustomIOSAlertViewDelegate> delegate;
 @property (nonatomic, retain) NSArray *buttonTitles;

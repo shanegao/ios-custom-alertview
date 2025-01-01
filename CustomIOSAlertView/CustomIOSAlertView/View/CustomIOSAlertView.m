@@ -17,6 +17,10 @@ const static CGFloat kCustomIOSAlertViewDefaultButtonSpacerHeight = 1;
 const static CGFloat kCustomIOSAlertViewCornerRadius              = 7;
 const static CGFloat kCustomIOS7MotionEffectExtent                = 10.0;
 
+@interface CustomIOSAlertView ()
+@property (assign, nonatomic) BOOL needsUpdateDialog;
+@end
+
 @implementation CustomIOSAlertView
 
 CGFloat buttonHeight = 0;
@@ -237,6 +241,14 @@ CGFloat buttonSpacerHeight = 0;
 
     // Add the custom container if there is any
     [dialogContainer addSubview:containerView];
+    
+    // Update container view's frame and constraints
+    if (self.containerSizeBlock != nil) {
+        CGSize size = self.containerSizeBlock();
+        containerView.frame = CGRectMake(0, 0, size.width, size.height);
+        [containerView layoutIfNeeded];
+        [containerView setNeedsLayout];
+    }
 
     // Add the buttons too
     [self addButtonsToView:dialogContainer];
@@ -275,8 +287,10 @@ CGFloat buttonSpacerHeight = 0;
 // Helper function: count and return the dialog's size
 - (CGSize)countDialogSize
 {
-    CGFloat dialogWidth = containerView.frame.size.width;
-    CGFloat dialogHeight = containerView.frame.size.height + buttonHeight + buttonSpacerHeight;
+    CGSize containerViewSize = self.containerSizeBlock != nil ?
+        self.containerSizeBlock() : containerView.frame.size;
+    CGFloat dialogWidth = containerViewSize.width;
+    CGFloat dialogHeight = containerViewSize.height + buttonHeight + buttonSpacerHeight;
 
     return CGSizeMake(dialogWidth, dialogHeight);
 }
@@ -405,11 +419,7 @@ CGFloat buttonSpacerHeight = 0;
         return;
     }
 
-    if (floor(NSFoundationVersionNumber) <= NSFoundationVersionNumber_iOS_7_1) {
-        [self changeOrientationForIOS7];
-    } else {
-        [self changeOrientationForIOS8:notification];
-    }
+    self.needsUpdateDialog = YES;
 }
 
 // Handle keyboard show/hide changes
@@ -456,6 +466,21 @@ CGFloat buttonSpacerHeight = 0;
     if ([touch.view isKindOfClass:[CustomIOSAlertView class]]) {
         [self close];
     }
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    if (self.needsUpdateDialog) {
+        [self resetAndShow];
+        self.needsUpdateDialog = NO;
+    }
+}
+
+- (void)resetAndShow {
+    for (UIView *subview in [self subviews]) {
+        [subview removeFromSuperview];
+    }
+    [self show];
 }
 
 @end
